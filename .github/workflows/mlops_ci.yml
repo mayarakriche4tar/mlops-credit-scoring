@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   test-and-train:
@@ -24,6 +25,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Exécution des tests unitaires et d'intégration (Pytest)
+      - name: Réentraînement du modèle (nouvelles données)
+        run: python train.py
+
+      - name: Exécution des tests (Pytest) et Quality Gate
+        run: pytest -v tests/
+
+      - name: Résumé visible dans GitHub
+        if: always()
         run: |
-          pytest -v tests/
+          echo "## Résultat du pipeline MLOps" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit : ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Modèle réentraîné sur les données du dépôt" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests et Quality Gate exécutés" >> $GITHUB_STEP_SUMMARY
+
+      - name: Sauvegarde du modèle et des métriques
+        uses: actions/upload-artifact@v4
+        with:
+          name: modele-et-mlruns
+          path: |
+            models/
+            mlruns/
+          if-no-files-found: ignore
