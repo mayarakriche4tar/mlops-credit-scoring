@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Réentraînement du modèle (nouvelles données)
-        run: python train.py
+        run: python -m src.train
 
       - name: Exécution des tests (Pytest) et Quality Gate
         run: pytest -v tests/
